@@ -1,0 +1,25 @@
+.photo-grid__trash-bin {
+    min-width: 20px;
+    min-height: 20px;
+    background-color: transparent;
+    padding: 0;
+    border: 0;
+    background-image: url(../../../images/TrashBin.svg);
+    box-sizing: border-box;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    outline: none;
+    position: absolute;
+    right: 15px;
+    top: 18px;
+}
+
+.photo-grid__trash-bin:hover {
+    opacity: 0.6;
+}
+
+.photo-grid__trash-bin_hidden {
+    display: none;
+    visibility: hidden;
+}

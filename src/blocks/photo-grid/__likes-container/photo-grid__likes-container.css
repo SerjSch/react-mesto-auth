@@ -1,0 +1,6 @@
+.photo-grid__likes-container {
+    color: black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
