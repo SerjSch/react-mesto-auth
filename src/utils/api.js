@@ -62,13 +62,21 @@ export class Api {
   }
 
   /////////////Удалим Лайк///////////////
-  // delCardsLike(cardId) {
-  //     return fetch(this._baseUrl + `/cards/likes/${cardId}`, {
-  //             method: 'DELETE',
-  //             headers: this._headers
-  //         })
-  //         .then(this._getResponseData(res));
-  // }
+  delCardsLike(cardId) {
+      return fetch(this._baseUrl + `/cards/likes/${cardId}`, {
+              method: 'DELETE',
+              headers: this._headers
+          })
+          .then(this._getResponseData);
+  }
+
+  handleCardLikeOnServer(cardId, isLiked) {
+    if(isLiked) {
+        return this.likeTheCard(cardId)
+    } else {
+        return this.delCardsLike(cardId)
+    }
+}
 
   /////////////Удалим Фотокарточку///////////////
   delCardFromServer(cardId) {

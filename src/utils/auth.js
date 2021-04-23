@@ -7,7 +7,7 @@ function _checkResponse(res) {
   return Promise.reject(`Ошибка в авторизации ${res.status}`);
 }
 
-export function signup ({ email, password }) {
+export function signup({ email, password }) {
   return fetch(`${BASE_URL}/signup`, {
     method: "POST",
     headers: {
@@ -26,14 +26,7 @@ export const signin = ({ email, password }) =>
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password }),
-  })
-    .then(_checkResponse)
-    .then((data) => {
-      if (data != null) {
-        localStorage.setItem("token", data.token);
-      }
-      return data;
-    });
+  }).then(_checkResponse);
 
 export const tokenValid = (token) =>
   fetch(`${BASE_URL}/users/me`, {

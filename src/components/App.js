@@ -14,11 +14,12 @@ import ProtectedRoute from "./ProtectedRoute.js";
 import Login from "./Login.js";
 import Register from "./Register.js";
 import InfoTooltip from "./InfoTooltip.js";
+import PageNotFound from "./PageNotFound.js";
 
 function App() {
   ////////////// КОНСТАНТЫ //////////////////////////////////////////////////////
   const history = useHistory();
-  const [delCard, setDelCard] = React.useState(null);
+  // const [delCard, setDelCard] = React.useState(null);
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = React.useState(
     false
   );
@@ -29,7 +30,7 @@ function App() {
   const [selectedCard, setSelectedCard] = React.useState({});
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = React.useState(false);
   const [loggedIn, setLoggedIn] = React.useState(false);
-  const [isRegisterSuccess, setIsRegisterSuccess] = React.useState(true);
+  const [isAuthReqSuccess, setIsAuthReqSuccess] = React.useState(true);
   const [isInfoToolOpen, setIsInfoToolOpen] = React.useState(false);
   const [cards, setCards] = React.useState([]);
   const [currentUser, setUserData] = React.useState({
@@ -41,7 +42,7 @@ function App() {
   ////////// ЮЗЭФЕКТЫ /////////////////////////////////////////////////////////////////
 
   function getInitialData(email) {
-    setLoggedIn(true);
+    // setLoggedIn(true);
     return Promise.all([Api.getInitialCards(), Api.getUserData()])
       .then(([initialCards, userData]) => {
         setUserData({ ...userData, email });
@@ -54,12 +55,13 @@ function App() {
 
   React.useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token !== null) {
+    if (token) {
       auth
         .tokenValid(token)
         .then((res) => {
           if (res) {
             getInitialData(res.data.email);
+            setLoggedIn(true);
           } else {
             setLoggedIn(false);
           }
@@ -70,34 +72,22 @@ function App() {
     }
   }, []);
 
-  // React.useEffect(() => {
-  //   Api.getUserData()
-  //     .then((res) => {
-  //       setUserData(res);
-  //     })
-  //     .catch((err) => {
-  //       console.log("Ошибка в получении данных пользователя: ", err);
-  //     });
-  // }, []);
-  // React.useEffect(() => {
-  //   Api.getInitialCards()
-  //     .then((res) => {
-  //       setCards(res);
-  //     })
-  //     .catch((err) => {
-  //       console.log("Ошибка в получении карточек", err);
-  //     });
-  // }, []);
-
-  /////////////////////////////////////////////////////////////////////////////
+ /////////////////////////////////////////////////////////////////////////////
   function handleCardLike(card) {
     // Снова проверяем, есть ли уже лайк на этой карточке
     const isLiked = card.likes.some((i) => i._id === currentUser._id);
     // Отправляем запрос в API и получаем обновлённые данные карточки
-    Api.likeTheCard(card._id, !isLiked).then((newCard) => {
-      setCards((state) => state.map((c) => (c._id === card._id ? newCard : c)));
-    });
+    Api.handleCardLikeOnServer(card._id, !isLiked)
+      .then((newCard) => {
+        setCards((state) =>
+          state.map((c) => (c._id === card._id ? newCard : c))
+        );
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
+
   function handleUpdateUser(userData) {
     Api.sendUserInfo(userData)
       .then((res) => {
@@ -129,11 +119,10 @@ function App() {
       });
   }
   function handleCardDelete(card) {
-    setDelCard(card);
+    // setDelCard(card);
     Api.delCardFromServer(card._id)
       .then(() => {
-        const newCards = cards.filter((c) => c._id !== card._id);
-        setCards(newCards);
+        setCards((prevCards) => prevCards.filter((c) => c._id !== card._id));
         closeAllPopups();
       })
       .catch((err) => {
@@ -166,31 +155,32 @@ function App() {
     auth
       .signup(registerData)
       .then((res) => {
-        if (res !== null) {
-          setIsRegisterSuccess(true);
-          setIsInfoToolOpen(true);
-          history.push("/sign-in");
-        }
+        setIsAuthReqSuccess(true);
+        setIsInfoToolOpen(true);
+        history.push("/sign-in");
       })
       .catch((err) => {
         console.log("Ошибка в handleRegister", err);
-        setIsRegisterSuccess(false);
+        setIsAuthReqSuccess(false);
         setIsInfoToolOpen(true);
       });
   }
   function handleLogin(loginData) {
     auth
       .signin(loginData)
+
       .then((res) => {
         if (res !== null) {
+          localStorage.setItem("token", res.token);
           getInitialData(loginData.email).catch((err) => {
             console.log("Ошибка получения почты при логине", err);
           });
+          setLoggedIn(true);
         }
       })
       .catch((err) => {
         console.log("Ошибка логина", err);
-        setIsRegisterSuccess(false);
+        setIsAuthReqSuccess(false);
         setIsInfoToolOpen(true);
       });
   }
@@ -209,7 +199,7 @@ function App() {
           <Switch>
             <Route path={"/sign-up"}>
               {loggedIn ? (
-                <Redirect to="./" />
+                <Redirect to="/" />
               ) : (
                 <>
                   <Header link={"sign-in"} text={"Войти"} />
@@ -220,7 +210,7 @@ function App() {
 
             <Route path={"/sign-in"}>
               {loggedIn ? (
-                <Redirect to="./" />
+                <Redirect to="/" />
               ) : (
                 <>
                   <Header link={"sign-up"} text={"Регистрация"} />
@@ -230,6 +220,7 @@ function App() {
             </Route>
             <ProtectedRoute
               component={Main}
+              exact
               path={"/"}
               cards={cards}
               onEditProfile={handleEditProfileClick}
@@ -263,9 +254,13 @@ function App() {
                 onAddCard={handleAddPlaceSubmit}
               />
             </ProtectedRoute>
+            <Route path="*">
+    <PageNotFound />
+  </Route>
+
           </Switch>
           <InfoTooltip
-            isSuccess={isRegisterSuccess}
+            isSuccess={isAuthReqSuccess}
             isOpen={isInfoToolOpen}
             onClose={closeAllPopups}
           />
