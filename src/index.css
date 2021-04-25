@@ -54,6 +54,7 @@
 @import url(./blocks/login/__submit/login__submit.css);
 @import url(./blocks/login/__link/login__link.css);
 
+@import url(./blocks/pagenotfound/__title/pagenotfound__title.css);
 
 @import url(./blocks/popup/__image/popup__image.css);
 @import url(./blocks/popup/__image-info/popup__image-info.css);
